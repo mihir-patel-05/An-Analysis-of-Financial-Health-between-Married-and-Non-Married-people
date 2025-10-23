@@ -1,0 +1,169 @@
+---
+title: "An Analysis of Financial Health between Married and Non-Married people"
+output: pdf_document
+date: "2025-04-30"
+author: 
+  - Mihir Patel 
+  - Arnav Patel 
+  - Allisandra McKague
+  - Siva Sai Ruthwik Suravarapu
+  - Elif Yazgan
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, results = 'hide')
+```
+
+```{r loading in our libraries, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(infer)
+library(dplyr)
+```
+
+```{r reading in our data set , echo=FALSE, results='hide'}
+credit <- read.csv(file = "Credit.csv")
+
+head(credit)
+```
+
+# Introduction
+
+  The 'American Dream' is a profound concept that encapsulates the enduring success that America promises. While success can be measured in various ways, financial well-being is one of the most significant factors. In today's world, a credit score plays a pivotal role in determining an individual's economic health. Whether it is buying a car, purchasing the perfect home to start a family, investing in large appliances, or pursuing higher education, all these aspirations are tied to one's credit score. It is a reliable metric to gauge an individual's financial management skills and debt-handling capabilities.
+
+  Our research question delved into the significant impact of marital status on an individual's financial health. We meticulously gathered a comprehensive dataset from the ISLP library called Credit to answer this question. This dataset allowed us to thoroughly analyze various variables between two distinct groups: married and non-married individuals. The variables we scrutinized included net worth, number of credit cards, credit scores, debt-to-income ratio, and credit limits.
+
+  Before we looked into our dataset, we analyzed other studies and stats to see if there was an initial reading or trends. According to Experian, a significant Credit reporting agency, in 2019, married individuals had an average credit score of around 715. Non-married individuals had an average of 659. It is important to note that from 2015 to 2019, the mean credit score for both groups has increased, but there could be some underlying factors in why married people have higher credit scores. Some of them could be the combined income status leading to banks trusting them more or higher income because they are later in their lives. The latter makes sense since married applicants can count household income on their credit applications. According to Chase Bank, a leading credit card giver, credit limits are based highly on one's income, and the fact that married individuals can count combined income can mean that they enjoy higher credit limits than singles. According to Moneywise, in the US, married householders have more wealth than single homeowners. According to Pew Research, married households have an average of 120k in assets, compared to single householders with 60k in assets.
+
+  Our Research Questions: **Does Martial Status influence financial well-being?** To answer this question, we divided it into five sub-questions. The first question was, "How does income compare between married and non-married people?" The second question is: "Does the variance in credit card usage (Cards and Balance) differ significantly between married and unmarried people across age groups?" The third question is: "If we take random samples of married and unmarried individuals, do we consistently see differences in average credit score (Rating)?". The fourth question is: "How do the credit limits compare between married and non-married people?" The last sub-question is: "Do married individuals have a lower debt-to-income ratio than unmarried individuals?"
+
+  Our first question deals with comparing income across the two groups and trying to fit an equation to it. We expect that married individuals probably have higher incomes than singles. Our second question concerns whether the two groups have a high variance in credit card usage. A higher variance suggests less financial stability since it indicates a higher credit balance. We expect to see married folks have a lower variance. The third and fourth questions deal with credit scores and credit limits comparisons but also see significance between the two groups. We expect to see a significance with higher being with the married people. Moreover, the final question compares the debt-to-income ratio. Married people should have lower DTI compared to single people.
+
+# Methodolgy
+
+## Data
+
+For this project, we utilized the *'Credit'* dataset from the 'ISLR' package, which comprises roughly 400 simulated observations across 12 variables, including credit limit, credit rating, age, and ethnicity. As our research focused on comparing credit card usage between students and non-students, we segmented the data into two groups: married and non-married individuals. We then conducted separate analyses for each group, based on the five sub-questions we aimed to explore.
+
+# Results
+
+### Question 1: What is the Income Vs Scores for Married vs non-Married
+
+### Question 2: Does the variance in credit card usage (Cards and Balance) differ significantly between married and unmarried people across age groups?
+
+### Question 3: Is there a significant difference on credit score between married and single individuals?
+
+  Credit scores are a good indicator of one's financial health, which refers to their ability to manage debt and make timely payments. Particularly, if one has a higher credit score, the person is better at handling debt responsibly and making timely payments. This is a good indicator of their financial health since worse decisions indicate missed payments on one's debts.
+  
+```{r finding mean, echo= FALSE, results='hide'}
+means_sample <- credit %>%
+        dplyr::group_by(Married) %>%
+        dplyr::summarise(means = mean(Rating, na.rm = TRUE))
+
+means_sample
+```
+
+  For the first question, we split our dataset according to the Married column and then calculated each group's mean credit score, better known as rating. We found that the mean for nonmarried people was **347**, and the mean for married people was **359**. The median credit score for married people was **354**, and for nonmarried people was **329**. From these calculated statistics, married people may have a higher credit score, indicating better financial health. However, we must remain cautious that these may not indicate significance. So, to analyze further and determine its significance, we proceeded to a classic hypothesis test. See our null and alt hypotheses below:
+
+        
+        H0: Mean Rating for married people = Mean rating for non-married people
+        HA: Mean Rating for married people > Mean rating for non-married people
+        
+  Our null hypothesis posits that the mean rating for married individuals is equal to that of nonmarried individuals. In contrast, our alternative hypothesis suggests that the mean credit score for married individuals is greater than that of their nonmarried counterparts. To test this, our team constructed a null distribution, focusing on the difference in means between married and nonmarried individuals. We conducted a P-value test in a one-tailed manner. Given that we are calculating the difference as married minus nonmarried, we aim to determine if the mean difference favors the married group over the nonmarried group.
+
+```{r hyothesis testing our two group on our mean, echo=FALSE}
+
+
+obs_diff <- credit %>%
+  specify(Rating ~ Married) %>%
+  calculate(stat = "diff in means", order = c("Yes", "No"))
+
+null_dist <- credit %>%
+  specify(Rating ~ Married) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 10000, type = "permute") %>%
+  calculate(stat = "diff in means", order = c("Yes", "No"))
+
+
+value <- get_p_value(null_dist, obs_stat = obs_diff, direction = "right") #we do right since we believe that married people have a greater mean credit score than non married people 
+
+
+visualize(null_dist) + shade_p_value(obs_stat = obs_diff, direction = "right") + labs(title ="Null distribution for the difference in means", x = 'Difference in means(Married - nonmarried)')
+```
+  
+  In this graph, we illustrate the calculated differences in means, specifically the mean credit scores of married individuals minus the mean credit scores of non-married individuals. The red line represents the observed statistics, highlighting the difference in means within our dataset. The shaded area in red indicates all instances where the difference in means exceeds our observed statistic. Following the creation of this graph, we computed the p-value for our difference in means to assess statistical significance. The resulting p-value was **0.22**, which is above the 0.05 threshold. This implies a 22% probability of observing a difference in means greater than our observed statistic under the assumption that marital status has no effect. Since this value exceeds 0.05, we fail to reject our null hypothesis, indicating that we cannot determine whether married individuals have higher credit scores than their non-married counterparts.
+  
+```{r t test on the mean, echo=FALSE, results='hide'}
+
+t.test(Rating ~ Married, data = credit, alternative = "less", var.equal = FALSE)
+
+```
+  
+  Additionally, we performed a t-test to evaluate the relevance of our findings, which, given its comparative nature between the two groups, yielded a p-value of **0.2292**. This further reinforces the conclusion that we cannot assert that married individuals possess higher credit scores than non-married individuals.
+  
+  Our analysis indicates no statistical significance in the credit scores between married and nonmarried individuals. Consequently, we cannot firmly establish that married individuals exhibit better financial health than their nonmarried counterparts. While there may be a correlation, we lack definitive proof of causation.
+
+```{r bootstrap dist for not married and married people, echo=FALSE, results='hide'}
+
+boot_dist_non <- credit %>%
+  dplyr::filter(Married == 'No') %>%
+  specify(response = Rating) %>%
+  generate(reps = 10000, type = 'bootstrap') %>%
+  calculate(stat = 'mean') 
+
+
+boot_dist_married <- credit%>%
+  dplyr::filter(Married == "Yes")%>%
+  specify(response = Rating) %>%
+  generate(reps = 10000, type = 'bootstrap') %>%
+  calculate(stat = 'mean') 
+
+
+mean_non_married <- boot_dist_non %>%
+  dplyr::summarise(mean_non_married = mean(stat, na.rm = TRUE))
+
+
+mean_married <- boot_dist_married %>%
+  dplyr::summarise(mean_married = mean(stat, na.rm = TRUE))
+
+```
+
+### Question 4: Is there a difference in Credit Limit between Married and Non-Married people?
+
+### Question 5: Does the Debt to Income ratio of married vs. unmarried people differ significantly?
+
+# Conclusion
+  In question 1, we used scatter plots to see the relationship between income vs. score and income vs. balance for both groups. In our graphs, we also fitted a linear regression line for both groups to see if one group had a more significant balance or rating increase. However, we concluded that both lines are very similar in slope, thus concluding there was a significant difference. In question 2, where we tried finding variance between married and nonmarried people, we see a higher variance in balance with nonmarried people, suggesting some non-consistent financial behavior, indicating poor financial health. In question 3, where we tried to see if there was a significant difference in mean credit scores between each group, our p-value was higher than the threshold, indicating no significant differences. In question 4, we tested for a significant difference in our credit limit between each group and, again, found no cause for statistical significance as our p-value was high. Finally, in question 5, where we looked at DTI, both groups had similar distributions of DTI, indicating no huge difference in financial health. Overall, for our research question, we conclude from this given dataset that although we saw a correlation between married people having better financial health, there is no significant difference, proving it to be a cause.
+  
+### Critique of methodology
+
+  Looking back at our methodology, we did find some minor issues with our analysis. In question 2, we should have used a lot better of a graph to better visualize the variances between each age group rather than doing a bar chart. The bar chart is very hard to really see if there is any difference in variances. In question 1, we should have accounted for age group for married and non-married people. This is because in our dataset, it does look like age does play a role where when people get older, there is a natural increase in income and balance but also credit rating. This means, it doesn’t matter if the person is married or not, as they get older, there is a increase. We could’ve done different graphs for different age ranges and then see if there is a difference in slopes. Also in our question 4, we should’ve done a 1 tailed test instead of 2 tailed, because we wanted to see if the credit limit for married people was higher or not. This would have meant that a difference in mean credit limits between the groups should have been conducted in a 1 tailed test manner. Overall, we believe our methodology here was a good starter to test for any statistically significant impact of marital status on financial health. 
+  
+### Limitations/Reliability
+  The data set we obtained for the ISLP package was not reliable enough as this data set was a simulated one rather than it being a real collected data set. This means since there was no random sampling, the conclusion we found cannot not be generalized to the rest of the population. Another issue was that this dataset did not contain a lot of datapoints. This meant that our hypothesis tests we conducted were severely impacted by this fact, and thus our test can’t be relied upon for the general conclusion of our research question.
+  
+### Future Research 
+  For future research purposes, we should have obtained a better, more accurate dataset, that contain real population data. We should have also created a correlation matrix between each variable just to see if there is any significant correlation and then picked those value to investigate more future. 
+
+# References
+
+Experian. (2020, February 10). Married consumers have higher credit scores and debt than single adults. https://www.experian.com/blogs/news/2020/02/married-consumers-credit-score-debt/
+
+Experian. (2023). State of Credit 2023. https://www.experian.com/blogs/news/2023/10/state-of-credit-2023/
+
+Federal Reserve Bank of St. Louis. (2020, December). Marriage and wealth: The long-term financial benefits of marrying and staying married. https://www.stlouisfed.org/publications/in-the-balance/2020/marriage-and-wealth
+
+JPMorgan Chase. (n.d.). Understanding your credit card limit. https://www.chase.com/personal/credit-cards/education/credit-score/credit-card-limit
+
+National Association of Realtors. (2022). 2022 Profile of Home Buyers and Sellers. https://www.nar.realtor/research-and-statistics/research-reports/highlights-from-the-profile-of-home-buyers-and-sellers
+
+NerdWallet. (2023). Can I use household income to apply for a credit card? https://www.nerdwallet.com/article/credit-cards/use-household-income-on-credit-card-application
+
+Pew Research Center. (2022). Wealth gaps between married and single Americans. https://www.pewresearch.org/
+
+USAFacts. (2023). Median household income by household type. https://usafacts.org/data/topics/people-society/income-poverty/income/household-income/
+
+Xiao, J. J., & Yao, R. (2020). Family structure and financial distress: Debt burden among different household types. International Journal of Bank Marketing, 38(4), 889–905. https://doi.org/10.1108/IJBM-01-2020-0012
+
+
+
